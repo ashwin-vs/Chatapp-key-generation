@@ -1,4 +1,3 @@
-// app/page.js
 'use client'; // Mark this as a Client Component
 
 import { useEffect, useRef, useState } from 'react';
@@ -11,32 +10,55 @@ export default function Home() {
   const wsRef = useRef(null);
 
   useEffect(() => {
-    // Connect to the WebSocket server
-    wsRef.current = new WebSocket('wss://chatapp-key-generation.onrender.com');
+    // Function to establish WebSocket connection
+    const connectWebSocket = () => {
+      wsRef.current = new WebSocket('wss://chatapp-key-generation.onrender.com');
 
-    wsRef.current.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+      wsRef.current.onopen = () => {
+        console.log('WebSocket connection established.');
+      };
 
-      if (data.type === 'welcome') {
-        setUserId(data.userId); // Set the user ID
-      } else if (data.type === 'message') {
-        setMessages((prev) => [...prev, { userId: data.userId, message: data.message }]);
-      } else if (data.type === 'user-connected') {
-        setMessages((prev) => [...prev, { system: true, message: `User ${data.userId} connected` }]);
-      } else if (data.type === 'user-disconnected') {
-        setMessages((prev) => [...prev, { system: true, message: `User ${data.userId} disconnected` }]);
-      }
+      wsRef.current.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.type === 'welcome') {
+          setUserId(data.userId); // Set the user ID
+        } else if (data.type === 'message') {
+          setMessages((prev) => [...prev, { userId: data.userId, message: data.message }]);
+        } else if (data.type === 'user-connected') {
+          setMessages((prev) => [...prev, { system: true, message: `User ${data.userId} connected` }]);
+        } else if (data.type === 'user-disconnected') {
+          setMessages((prev) => [...prev, { system: true, message: `User ${data.userId} disconnected` }]);
+        }
+      };
+
+      wsRef.current.onclose = () => {
+        console.log('WebSocket connection closed. Reconnecting...');
+        setTimeout(connectWebSocket, 5000); // Reconnect after 5 seconds
+      };
+
+      wsRef.current.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
     };
 
+    // Establish the initial WebSocket connection
+    connectWebSocket();
+
+    // Cleanup function to close the WebSocket connection on unmount
     return () => {
-      wsRef.current.close();
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
     };
   }, []);
 
   const sendMessage = () => {
-    if (inputValue.trim()) {
+    if (inputValue.trim() && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ message: inputValue }));
       setInputValue('');
+    } else {
+      console.error('WebSocket is not open or message is empty.');
     }
   };
 
@@ -62,12 +84,17 @@ export default function Home() {
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            className="flex-1  p-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 p-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Type a message..."
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                sendMessage();
+              }
+            }}
           />
           <button
             onClick={sendMessage}
-            className="px-4 py-2  bg-blue-500 text-white rounded-r-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 bg-blue-500 text-white rounded-r-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             Send
           </button>
