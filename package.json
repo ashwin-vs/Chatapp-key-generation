@@ -1,0 +1,28 @@
+{
+  "name": "chat-app-new",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "start-ws": "node lib/websocket.js",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "start-all": "concurrently \"npm run dev\" \"npm run start-ws\""
+  },
+  "dependencies": {
+    "concurrently": "^9.1.2",
+    "mongodb": "^6.15.0",
+    "mongoose": "^8.12.1",
+    "next": "15.2.3",
+    "next-auth": "^4.24.11",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "uuid": "^11.1.0",
+    "ws": "^8.18.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "tailwindcss": "^4"
+  }
+}
