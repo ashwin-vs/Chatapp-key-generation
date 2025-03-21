@@ -79,7 +79,7 @@ export default function Home() {
     <ProtectedRoute>
       <div className="p-5 font-sans max-w-lg mx-auto bg-white rounded-lg shadow-md h-screen">
         <h1 className="text-2xl font-bold text-center mb-4">Chat Application</h1>
-        <div className="text-sm text-gray-600 mb-2">Status: {connectionStatus}</div>
+        <div className="text-sm text-black mb-2">Status: {connectionStatus} heyy</div>
         <div className="border border-gray-300 rounded-lg p-4 h-190 overflow-y-auto">
           {messages.map((msg, index) => (
             <div key={index} className="mb-3">
