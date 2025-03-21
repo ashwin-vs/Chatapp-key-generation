@@ -11,29 +11,20 @@ export default function Home() {
 
   useEffect(() => {
     let reconnectAttempts = 0;
-    const maxReconnectAttempts = 5; // Maximum number of reconnection attempts
-    const reconnectDelay = 5000; // Reconnect after 5 seconds
+    const maxReconnectAttempts = 5;
+    const reconnectDelay = 5000;
   
     const connectWebSocket = () => {
       const ws = new WebSocket('wss://chatapp-key-generation.onrender.com');
   
       ws.onopen = () => {
         console.log('WebSocket connection established.');
-        reconnectAttempts = 0; // Reset reconnection attempts on successful connection
+        reconnectAttempts = 0; // Reset reconnection attempts
       };
   
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
-  
-        if (data.type === 'welcome') {
-          setUserId(data.userId); // Set the user ID
-        } else if (data.type === 'message') {
-          setMessages((prev) => [...prev, { userId: data.userId, message: data.message }]);
-        } else if (data.type === 'user-connected') {
-          setMessages((prev) => [...prev, { system: true, message: `User ${data.userId} connected` }]);
-        } else if (data.type === 'user-disconnected') {
-          setMessages((prev) => [...prev, { system: true, message: `User ${data.userId} disconnected` }]);
-        }
+        // Handle incoming messages
       };
   
       ws.onclose = () => {
@@ -79,7 +70,7 @@ export default function Home() {
     <ProtectedRoute>
       <div className="p-5 font-sans max-w-lg mx-auto bg-white rounded-lg shadow-md h-screen">
         <h1 className="text-2xl font-bold text-center mb-4">Chat Application</h1>
-        <div className="text-xl text-black mb-2">Status:  heyy</div>
+        <div className="text-xl text-black mb-2">Status:  heloo</div>
         <div className="border border-gray-300 rounded-lg p-4 h-190 overflow-y-auto">
           {messages.map((msg, index) => (
             <div key={index} className="mb-3">
