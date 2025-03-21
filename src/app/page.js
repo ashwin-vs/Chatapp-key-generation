@@ -12,7 +12,7 @@ export default function Home() {
 
   useEffect(() => {
     // Connect to the WebSocket server
-    wsRef.current = new WebSocket('ws://localhost:3001');
+    wsRef.current = new WebSocket('ws://chatapp-key-generation.onrender.com');
 
     wsRef.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
