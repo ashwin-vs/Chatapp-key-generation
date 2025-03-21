@@ -7,46 +7,58 @@ export default function Home() {
   const [messages, setMessages] = useState([]);
   const [userId, setUserId] = useState(null);
   const [inputValue, setInputValue] = useState('');
+  const [connectionStatus, setConnectionStatus] = useState('Connecting...');
   const wsRef = useRef(null);
 
   useEffect(() => {
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 5;
     const reconnectDelay = 5000;
-  
+
     const connectWebSocket = () => {
       const ws = new WebSocket('wss://chatapp-key-generation.onrender.com');
-  
+
       ws.onopen = () => {
         console.log('WebSocket connection established.');
+        setConnectionStatus('Connected');
         reconnectAttempts = 0; // Reset reconnection attempts
       };
-  
+
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        // Handle incoming messages
+
+        if (data.type === 'welcome') {
+          setUserId(data.userId); // Set the user ID
+        } else if (data.type === 'message') {
+          setMessages((prev) => [...prev, { userId: data.userId, message: data.message }]);
+        } else if (data.type === 'user-connected') {
+          setMessages((prev) => [...prev, { system: true, message: `User ${data.userId} connected` }]);
+        } else if (data.type === 'user-disconnected') {
+          setMessages((prev) => [...prev, { system: true, message: `User ${data.userId} disconnected` }]);
+        }
       };
-  
+
       ws.onclose = () => {
         console.log('WebSocket connection closed.');
+        setConnectionStatus('Reconnecting...');
         if (reconnectAttempts < maxReconnectAttempts) {
-          console.log(`Reconnecting in ${reconnectDelay / 1000} seconds...`);
           setTimeout(connectWebSocket, reconnectDelay);
           reconnectAttempts++;
         } else {
-          console.error('Max reconnection attempts reached. Please refresh the page.');
+          setConnectionStatus('Disconnected. Please refresh the page.');
         }
       };
-  
+
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
+        setConnectionStatus('Connection error. Please refresh the page.');
       };
-  
+
       wsRef.current = ws;
     };
-  
+
     connectWebSocket();
-  
+
     return () => {
       if (wsRef.current) {
         wsRef.current.close();
@@ -66,11 +78,12 @@ export default function Home() {
       console.error('Message is empty.');
     }
   };
+
   return (
     <ProtectedRoute>
       <div className="p-5 font-sans max-w-lg mx-auto bg-white rounded-lg shadow-md h-screen">
         <h1 className="text-2xl font-bold text-center mb-4">Chat Application</h1>
-        <div className="text-xl text-black mb-2">Status:  heloo</div>
+        <div className="text-sm text-gray-600 mb-2">Status: {connectionStatus}</div>
         <div className="border border-gray-300 rounded-lg p-4 h-190 overflow-y-auto">
           {messages.map((msg, index) => (
             <div key={index} className="mb-3">

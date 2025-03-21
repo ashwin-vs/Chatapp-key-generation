@@ -1,31 +1,30 @@
-// app/login/page.js
-"use client"; // Mark this as a Client Component
-import { signIn } from "next-auth/react";
-import Link from "next/link";
-import { useState } from "react";
+'use client'; // Mark this as a Client Component
+import { signIn } from 'next-auth/react';
+import Link from 'next/link';
+import { useState } from 'react';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [secretKey, setSecretKey] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [secretKey, setSecretKey] = useState('');
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError('');
 
     // Fetch the secret key from the server
-    const response = await fetch("/api/store-secret-key");
+    const response = await fetch('/api/store-secret-key');
     const { secretKey: validSecretKey } = await response.json();
 
     // Validate the secret key
     if (secretKey !== validSecretKey) {
-      setError("Invalid secret key");
+      setError('Invalid secret key');
       return;
     }
 
     // Call the `signIn` function from next-auth
-    const result = await signIn("credentials", {
+    const result = await signIn('credentials', {
       redirect: false,
       email,
       password,
@@ -35,7 +34,7 @@ export default function LoginPage() {
       setError(result.error);
     } else {
       // Redirect to the dashboard or home page after successful login
-      window.location.href = "/";
+      window.location.href = '/';
     }
   };
 

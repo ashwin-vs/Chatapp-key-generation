@@ -1,5 +1,4 @@
-// app/api/store-secret-key/route.js
-let secretKey = ""; // Store the secret key in memory (or use a database)
+let secretKey = ""; // Store the secret key in memory
 
 export async function POST(request) {
   const { secretKey: newSecretKey } = await request.json();
