@@ -10,17 +10,21 @@ export default function Home() {
   const wsRef = useRef(null);
 
   useEffect(() => {
-    // Function to establish WebSocket connection
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5; // Maximum number of reconnection attempts
+    const reconnectDelay = 5000; // Reconnect after 5 seconds
+  
     const connectWebSocket = () => {
-      wsRef.current = new WebSocket('wss://chatapp-key-generation.onrender.com');
-
-      wsRef.current.onopen = () => {
+      const ws = new WebSocket('wss://chatapp-key-generation.onrender.com');
+  
+      ws.onopen = () => {
         console.log('WebSocket connection established.');
+        reconnectAttempts = 0; // Reset reconnection attempts on successful connection
       };
-
-      wsRef.current.onmessage = (event) => {
+  
+      ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
-
+  
         if (data.type === 'welcome') {
           setUserId(data.userId); // Set the user ID
         } else if (data.type === 'message') {
@@ -31,21 +35,27 @@ export default function Home() {
           setMessages((prev) => [...prev, { system: true, message: `User ${data.userId} disconnected` }]);
         }
       };
-
-      wsRef.current.onclose = () => {
-        console.log('WebSocket connection closed. Reconnecting...');
-        setTimeout(connectWebSocket, 5000); // Reconnect after 5 seconds
+  
+      ws.onclose = () => {
+        console.log('WebSocket connection closed.');
+        if (reconnectAttempts < maxReconnectAttempts) {
+          console.log(`Reconnecting in ${reconnectDelay / 1000} seconds...`);
+          setTimeout(connectWebSocket, reconnectDelay);
+          reconnectAttempts++;
+        } else {
+          console.error('Max reconnection attempts reached. Please refresh the page.');
+        }
       };
-
-      wsRef.current.onerror = (error) => {
+  
+      ws.onerror = (error) => {
         console.error('WebSocket error:', error);
       };
+  
+      wsRef.current = ws;
     };
-
-    // Establish the initial WebSocket connection
+  
     connectWebSocket();
-
-    // Cleanup function to close the WebSocket connection on unmount
+  
     return () => {
       if (wsRef.current) {
         wsRef.current.close();
@@ -54,18 +64,22 @@ export default function Home() {
   }, []);
 
   const sendMessage = () => {
-    if (inputValue.trim() && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ message: inputValue }));
-      setInputValue('');
+    if (inputValue.trim()) {
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ message: inputValue }));
+        setInputValue('');
+      } else {
+        console.error('WebSocket is not open. Please wait for the connection to be established.');
+      }
     } else {
-      console.error('WebSocket is not open or message is empty.');
+      console.error('Message is empty.');
     }
   };
-
   return (
     <ProtectedRoute>
       <div className="p-5 font-sans max-w-lg mx-auto bg-white rounded-lg shadow-md h-screen">
         <h1 className="text-2xl font-bold text-center mb-4">Chat Application</h1>
+        <div className="text-sm text-gray-600 mb-2">Status: {connectionStatus}</div>
         <div className="border border-gray-300 rounded-lg p-4 h-190 overflow-y-auto">
           {messages.map((msg, index) => (
             <div key={index} className="mb-3">
